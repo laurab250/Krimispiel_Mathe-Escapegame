@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Room: Der vergiftete Wissenschaftler</title>
+    <style>
+        /* --- GRUNDEINSTELLUNGEN & FARBSCHEMA --- */
+        :root {
+            --bg-dark:      #0f1117;
+            --bg-card:      #1a1d27;
+            --bg-input:     #252836;
+            --accent:       #e8a838;
+            --accent-dim:   #b07a1a;
+            --text-primary: #e8e8e8;
+            --text-muted:   #888ea8;
+            --danger:       #e05454;
+            --success:      #3ecf8e;
+            --border:       #2e3248;
+            --email-blue:   #3a86ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1, h2, h3, h4, h5, h6, .monospace {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* --- LAYOUT & HEADER --- */
+        .main-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        .header-left {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .reset-btn {
+            cursor: pointer;
+            margin-left: 12px;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+            user-select: none;
+        }
+        .reset-btn:hover { color: var(--accent); }
+        .version-tag {
+            position: fixed;
+            bottom: 5px;
+            right: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            opacity: 0.45;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .progress-bar {
+            display: flex;
+            gap: 10px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .progress-dot {
+            width: 10px;
+            height: 10px;
+            background-color: var(--border);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .progress-dot.active {
+            background-color: var(--accent);
+            transform: scale(1.2);
+        }
+
+        .header-right {
+            position: relative;
+            cursor: pointer;
+        }
+        .envelope-icon {
+            font-size: 1.8rem;
+            color: var(--text-muted);
+        }
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -5px;
+            background-color: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            display: none; /* Initially hidden */
+        }
+
+        main {
+            flex-grow: 1;
+            padding-top: 50px; /* Header height */
+            position: relative;
+            overflow-y: auto;
+        }
+
+        /* --- PHASEN-MANAGEMENT --- */
+        .phase {
+            display: none;
+            padding: 40px;
+            min-height: 100%;
+            animation: fade-in 0.4s ease-out;
+        }
+        .phase.active {
+            display: block;
+        }
+        .phase-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--bg-card);
+            padding: 30px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        /* --- ALLGEMEINE KOMPONENTEN --- */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--accent);
+            color: var(--bg-dark);
+            font-weight: bold;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .btn:hover {
+            background-color: var(--accent-dim);
+            text-decoration: none;
+        }
+        .btn:disabled {
+            background-color: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-success { background-color: var(--success); color: white; }
+
+        .stamp {
+            color: var(--danger);
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 2px solid var(--danger);
+            padding: 5px 8px;
+            display: inline-block;
+            transform: rotate(-5deg);
+            animation: stamp-appear 0.3s ease-out;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 20px 0;
+        }
+
+        .input-group {
+            margin-top: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .input-group input[type="text"],
+        .input-group input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .input-group input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .feedback-box {
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-weight: bold;
+            animation: fade-in 0.3s;
+        }
+        .feedback-box.success {
+            background-color: rgba(62, 207, 142, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        .feedback-box.error {
+            background-color: rgba(224, 84, 84, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        /* --- ANIMATIONEN --- */
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes shake {
+            10%, 90% { transform: translateX(-8px); }
+            20%, 80% { transform: translateX(8px); }
+            30%, 50%, 70% { transform: translateX(-8px); }
+            40%, 60% { transform: translateX(8px); }
+        }
+        .shake { animation: shake 0.4s; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+        @keyframes envelope-shake {
+            0%, 100% { transform: rotate(0); }
+            25% { transform: rotate(12deg); }
+            75% { transform: rotate(-12deg); }
+        }
+        .envelope-shake { animation: envelope-shake 0.1s 3; }
+        @keyframes stamp-appear {
+            from { opacity: 0; transform: scale(2) rotate(-5deg); }
+            to { opacity: 1; transform: scale(1) rotate(-5deg); }
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        .confetti-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 9999;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent);
+            opacity: 0;
+            animation: confetti-fall 3s ease-in forwards;
+        }
+
+        /* --- PHASE 0: BRIEFING --- */
+        #phase-0 .phase-container { text-align: center; }
+        #phase-0 h1 { font-size: 1.8rem; letter-spacing: 2px; }
+        #phase-0 h2 { font-size: 1rem; color: var(--text-muted); margin-top: 5px; }
+        #phase-0 .stamp { margin-top: 20px; }
+        #phase-0 p { margin: 20px 0; line-height: 1.6; }
+        #phase-0 .btn { margin-top: 20px; }
+
+        /* --- PHASE 1: VERDÄCHTIGE --- */
+        #phase-1 h1 { text-align: center; margin-bottom: 30px; }
+        .suspects-slider {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 20px;
+            scroll-snap-type: x mandatory;
+        }
+        .suspect-card {
+            flex: 0 0 160px;
+            width: 160px;
+            height: 300px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            text-align: center;
+            padding: 10px;
+            scroll-snap-align: center;
+            position: relative;
+            transition: filter 0.3s ease;
+        }
+        .suspect-card img, .suspect-card .img-placeholder {
+            width: 100%;
+            height: 195px;
+            object-fit: cover;
+            object-position: top center;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .img-placeholder {
+            background-color: var(--bg-input);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+        .suspect-card .name { font-weight: bold; font-size: 0.9rem; }
+        .suspect-card .role { font-size: 0.75rem; color: var(--text-muted); min-height: 34px; }
+        .suspect-card .alibi { font-style: italic; font-size: 0.7rem; margin-top: 5px; }
+        .suspect-card .stamp {
+            position: absolute;
+            top: 168px;
+            left: 50%;
+            right: auto;
+            bottom: auto;
+            transform: translateX(-50%) rotate(-6deg);
+            font-size: 0.62rem;
+            padding: 2px 6px;
+            background-color: rgba(15, 17, 23, 0.8);
+        }
+        .suspect-card.eliminated {
+            filter: grayscale(100%);
+        }
+        .suspect-card.eliminated::after {
+            content: 'AUSGESCHLOSSEN';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(26, 29, 39, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--danger);
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 4px solid var(--danger);
+            border-radius: 8px;
+            transform: rotate(10deg);
+        }
+        #phase-1 .btn { display: block; margin: 30px auto 0; }
+
+        /* --- PHASE 2: TATORT --- */
+        #phase-2 { text-align: center; }
+        #phase-2 h1 { font-size: 1.5rem; }
+        #phase-2 .subtitle { color: var(--danger); margin-top: 5px; font-size: 0.9rem; }
+        .wimmelbild-container {
+            margin: 30px auto;
+            border: 2px solid var(--accent);
+            width: 100%;
+            max-width: 900px;
+            background: #525659;
+        }
+        .wimmelbild-frame {
+            display: block;
+            width: 100%;
+            height: 70vh;
+            min-height: 420px;
+            border: none;
+        }
+        .wimmelbild-frame img {
+            display: block;
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+        }
+        .download-link {
+            display: block;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        .info-panel {
+            background-color: rgba(232, 168, 56, 0.1);
+            border: 1px solid var(--accent);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px auto;
+            max-width: 600px;
+            text-align: left;
+            line-height: 1.6;
+        }
+        #phase-2 .btn { margin-top: 20px; }
+
+        /* --- PHASE 3: EMAILS --- */
+        #phase-3 { padding: 0; }
+        .email-layout {
+            display: flex;
+            height: calc(100vh - 50px);
+        }
+        .email-sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .email-sidebar-header {
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            border-bottom: 1px solid var(--border);
+        }
+        .email-list {
+            list-style: none;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .email-item {
+            padding: 15px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+        .email-item:hover { background-color: var(--bg-input); }
+        .email-item.active { background-color: var(--bg-dark); }
+        .email-item.unread .from, .email-item.unread .subject { font-weight: bold; }
+        .email-item.unread::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background-color: var(--email-blue);
+            border-radius: 50%;
+        }
+        .email-item .from { font-size: 0.9rem; padding-right: 72px; }
+        .email-item .subject { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .email-item .time { font-size: 0.75rem; color: var(--text-muted); position: absolute; top: 15px; right: 15px; }
+
+        .email-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        .email-content-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+        .email-header {
+            background-color: var(--bg-card);
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .email-header-item { display: flex; margin-bottom: 5px; }
+        .email-header-item .label { width: 80px; color: var(--text-muted); }
+        .email-body { line-height: 1.7; }
+        .email-body p { margin-bottom: 1em; }
+        .email-body strong { color: var(--accent); }
+        .email-body .formula {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.1rem;
+            background: var(--bg-input);
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .email-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0.5em 0 1em;
+            font-size: 0.9rem;
+        }
+        .email-body th, .email-body td {
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            text-align: left;
+        }
+        .email-body th { background: var(--bg-input); color: var(--accent); }
+        .email-attachment {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--email-blue);
+        }
+        .email-attachment:hover { background-color: var(--border); }
+        .email-answer-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* --- PHASE 4: ANRUF --- */
+        .call-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(15, 17, 23, 0.95);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            animation: fade-in 0.3s;
+        }
+        .call-icon {
+            font-size: 5rem;
+            color: var(--success);
+            animation: pulse 1.2s infinite;
+        }
+        .call-overlay h1 { font-size: 2.5rem; margin-top: 20px; }
+        .call-overlay h2 { font-size: 1.2rem; color: var(--text-primary); }
+        .call-overlay h3 { font-size: 1rem; color: var(--text-muted); margin-top: 5px; }
+        .call-buttons { margin-top: 40px; display: flex; gap: 20px; justify-content: center; }
+        #call-active-view audio {
+            margin: 20px 0;
+            width: 100%;
+            max-width: 400px;
+        }
+        #call-active-view p { color: var(--text-muted); }
+
+        /* --- PHASE 5: LGS --- */
+        #phase-5 .phase-container { max-width: 700px; }
+        #phase-5 h1 { text-align: center; margin-bottom: 20px; }
+        .lgs-formulas {
+            background-color: var(--bg-input);
+            padding: 20px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .lgs-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        #phase-5 .btn { display: block; width: 100%; margin-top: 30px; }
+        #lgs-success-box ul {
+            list-style: none;
+            margin-top: 10px;
+            padding-left: 10px;
+        }
+        #lgs-success-box li { margin-bottom: 5px; }
+
+        /* --- PHASE 6: AUFLÖSUNG --- */
+        #phase-6.active {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #phase-6 .stamp { font-size: 2rem; animation: stamp-appear 1s ease-out; }
+        .culprit-photo {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid var(--danger);
+            margin: 30px auto;
+            position: relative;
+        }
+        .culprit-photo .stamp {
+            position: absolute;
+            bottom: 0;
+            right: -20px;
+            font-size: 1rem;
+        }
+        #phase-6 h1 { font-size: 2.5rem; }
+        #phase-6 h2 { color: var(--text-muted); font-size: 1rem; margin-bottom: 20px; }
+        #phase-6 .motive { max-width: 600px; margin: 20px auto; line-height: 1.6; }
+        .evidence-chain {
+            margin: 30px auto;
+            max-width: 600px;
+            text-align: left;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+        .evidence-chain span { color: var(--text-muted); }
+        #phase-6 .btn { margin-top: 40px; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .phase { padding: 20px; }
+            .email-layout { flex-direction: column; }
+            .email-sidebar { width: 100%; height: 200px; border-right: none; border-bottom: 1px solid var(--border); }
+            .email-content { padding: 20px; }
+            .lgs-inputs { grid-template-columns: 1fr; }
+            .main-header { padding: 0 10px; }
+            .progress-bar { gap: 5px; position: static; transform: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="header-left monospace">🔍 FALL #2024-0311 <span class="reset-btn" id="reset-btn" title="Neu starten (Lehrer-Code)">↻</span></div>
+        <div class="progress-bar" id="progress-bar">
+            <!-- Dots will be generated by JS -->
+        </div>
+        <div class="header-right" id="email-icon-container">
+            <span class="envelope-icon">✉️</span>
+            <span class="notification-badge" id="notification-badge">0</span>
+        </div>
+    </header>
+
+    <div class="version-tag">v7 · arbeitsblaetter</div>
+
+    <main id="main-content">
+        <!-- PHASE 0: BRIEFING -->
+        <div id="phase-0" class="phase">
+            <div class="phase-container">
+                <h1>KRIMINALINSPEKTION MITTE</h1>
+                <h2>Vertraulich – Nur für autorisiertes Ermittlungspersonal</h2>
+                <div class="stamp" style="margin-top: 20px;">TATORTAKTE #2024-0311</div>
+                <hr>
+                <p>
+                    Dienstag, 14. März. Im Institut für Angewandte Chemie wurde Dr. Markus Feld leblos im Labor aufgefunden. Als Todesursache wurde Tetrodotoxin (TTX) identifiziert – ein hochwirksames Gift aus dem internen Giftschrank. Alle acht Institutsmitglieder hatten Zugang zum Gebäude. Eure Aufgabe: Analysiert die Spuren, löst die mathematischen Beweise – und überführt den Täter.
+                </p>
+                <button class="btn" onclick="advanceToPhase(1)">ERMITTLUNG STARTEN →</button>
+            </div>
+        </div>
+
+        <!-- PHASE 1: VERDÄCHTIGE -->
+        <div id="phase-1" class="phase">
+            <h1>DIE VERDÄCHTIGEN</h1>
+            <div class="suspects-slider" id="suspects-container">
+                <!-- Suspect cards will be generated by JS -->
+            </div>
+            <button class="btn" onclick="advanceToPhase(2)">TATORT BEGUTACHTEN →</button>
+        </div>
+
+        <!-- PHASE 2: TATORT -->
+        <div id="phase-2" class="phase">
+            <h1>TATORTAUFNAHME – BEREICH B, HAUPTLABOR</h1>
+            <p class="subtitle">Aufnahmedatum: Dienstag, 14. März | Kamera 01 – Südwand</p>
+            
+            <div class="wimmelbild-container">
+                <object data="assets/images/wimmelbild.pdf#toolbar=1&navpanes=0&view=Fit" type="application/pdf" class="wimmelbild-frame">
+                    <a href="assets/images/wimmelbild.pdf" target="_blank">
+                        <img src="assets/images/wimmelbild.png" alt="Tatort Wimmelbild">
+                    </a>
+                </object>
+            </div>
+            <a href="assets/images/wimmelbild.pdf" target="_blank" class="btn" style="margin-top: 6px;">🔍 Wimmelbild im Vollbild öffnen (scharf zoomen)</a>
+            <p class="subtitle" style="color: var(--text-muted); margin-top: 12px;">Tipp: Im eingebetteten Viewer oder im Vollbild könnt ihr hineinzoomen, um alle Details zu erkennen.</p>
+            <a href="assets/images/wimmelbild.pdf" download class="download-link">↓ Als PDF herunterladen (Druckqualität)</a>
+            <a href="assets/docs/spur1_polizeibericht.pdf" target="_blank" class="download-link">📄 Polizeibericht / Formular öffnen</a>
+
+            <div class="info-panel">
+                📋 <strong>Aufgabe:</strong> Analysiert das Tatortbild sorgfältig und füllt den Polizeibericht aus (ihr habt ihn auf Papier erhalten). Notiert alle Hinweise – ihr werdet sie später brauchen.
+            </div>
+
+            <button class="btn" onclick="advanceToPhase(3)">WIMMELBILD ANALYSIERT – WEITER →</button>
+        </div>
+
+        <!-- PHASE 3: EMAILS -->
+        <div id="phase-3" class="phase">
+            <div class="email-layout">
+                <aside class="email-sidebar">
+                    <div class="email-sidebar-header">POSTEINGANG</div>
+                    <ul class="email-list" id="email-list">
+                        <!-- Email items will be generated by JS -->
+                    </ul>
+                </aside>
+                <section class="email-content" id="email-content">
+                    <div class="email-content-placeholder">Keine Email ausgewählt</div>
+                </section>
+            </div>
+        </div>
+
+        <!-- PHASE 4: ANRUF (Overlay) -->
+        <div id="phase-4" class="phase">
+            <!-- This phase is handled by a dynamic overlay -->
+        </div>
+
+        <!-- PHASE 5: LGS -->
+        <div id="phase-5" class="phase">
+            <div class="phase-container">
+                <h1>ZUGANGSSYSTEM – AUSWERTUNG</h1>
+                <p>Hört euch den Anruf der Polizei an. Den Rest – das Gleichungssystem aufstellen und lösen – erarbeitet ihr selbst.</p>
+                <a href="assets/docs/spur7_aufgabe.pdf" target="_blank" class="email-attachment" onclick="handlePdfLink(event, 'assets/docs/spur7_aufgabe.pdf')">📎 Aufgabenblatt – Zugangssystem (PDF)</a>
+
+                <div class="lgs-inputs">
+                    <div class="input-group">
+                        <label for="lgs-p">Chip-Nummer p =</label>
+                        <input type="number" id="lgs-p" placeholder="p eingeben..." onkeydown="if(event.key==='Enter'){event.preventDefault();solveLGS();}">
+                    </div>
+                    <div class="input-group">
+                        <label for="lgs-t">Zeitwert t =</label>
+                        <input type="number" id="lgs-t" placeholder="t eingeben..." onkeydown="if(event.key==='Enter'){event.preventDefault();solveLGS();}">
+                    </div>
+                </div>
+
+                <button class="btn" onclick="solveLGS()">Gleichungssystem auflösen</button>
+                <div id="lgs-feedback"></div>
+            </div>
+        </div>
+
+        <!-- PHASE 6: AUFLÖSUNG -->
+        <div id="phase-6" class="phase">
+            <div class="confetti-container" id="confetti-container"></div>
+            <div class="stamp">FALL GELÖST</div>
+            <div id="culprit-reveal">
+                <!-- Culprit info will be generated by JS -->
+            </div>
+            <button class="btn" onclick="resetGame()">ERMITTLUNG NEU STARTEN</button>
+        </div>
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Lehrer-Code zum kompletten Zurücksetzen des Spiels (hier änderbar)
+        const RESET_CODE = '1234';
+
+        // --- STATE MANAGEMENT ---
+        const state = {
+            currentPhase: 0,
+            emailsReceived: [],
+            emailsSolved: [],
+            currentEmailId: null,
+            eliminatedSuspects: []
+        };
+
+        function loadState() {
+            const saved = localStorage.getItem('escapeRoomState');
+            if (saved) {
+                Object.assign(state, JSON.parse(saved));
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('escapeRoomState', JSON.stringify(state));
+        }
+
+        // --- DATA ---
+        const suspects = [
+          { id: "jonas_kern",    name: "Jonas Kern",        age: 51, role: "Leitender Labortechniker",   alibi: "Werkstatt Süd (13:00–16:30)" },
+          { id: "elena_voss",   name: "Dr. Elena Voss",     age: 44, role: "Stellv. Laborleiterin",       alibi: "Videokonferenz (14:00–16:00)" },
+          { id: "sarah_mayer",  name: "Sarah Mayer",         age: 29, role: "Doktorandin",                 alibi: "Institutsbibliothek ab 13:30" },
+          { id: "anton_richter",name: "Prof. Anton Richter", age: 62, role: "Seniorprofessor Biochemie",   alibi: "Vorlesung (14:00–15:30)" },
+          { id: "lena_brandt",  name: "Lena Brandt",         age: 37, role: "Laborverwaltung / Security",  alibi: "Besprechung Verwaltung (13–16)" },
+          { id: "david_okonkwo",name: "David Okonkwo",       age: 33, role: "Gastwissenschaftler",         alibi: "Gastunterkunft Campus" },
+          { id: "miriam_scholz",name: "Miriam Scholz",       age: 40, role: "Chemikalienanalytikerin",     alibi: "Außenlabor (14:00–16:00)" },
+          { id: "felix_hauser", name: "Felix Hauser",         age: 26, role: "IT-Techniker / Security",    alibi: "Serverraum (ganztags)" }
+        ];
+        const emailClues = [
+          {
+            id: "spur2",
+            from: "Kriminalinspektion Mitte – Forensische Auswertung",
+            subject: "Übermittlung forensischer Studienunterlagen – Fall Feld",
+            time: "Di, 16:42 Uhr",
+            body: `
+              <p>Guten Tag,</p>
+              <p>im Rahmen unserer Ermittlungen haben wir Daten aus 83 vergleichbaren Giftmord-Fällen der
+              letzten Jahre ausgewertet. Beide beigefügten Grafiken beschreiben dasselbe Merkmal – die
+              Handgröße überführter Täter. Die Grafikdateien wurden beim Übertragen beschädigt und neu
+              zugeordnet – wir sind uns nicht sicher, ob die Zuordnung korrekt ist. Bitte prüft das.
+              Identifiziert die fehlerhafte Darstellung und begründet eure Entscheidung.</p>
+              <p>Zusätzlich übermitteln wir euch im Anhang den forensischen Messbericht zu den acht
+              Verdächtigen. Die Spurensicherung hat außerdem festgestellt: Die am Tatort gesicherten
+              Handschuhe passen zu einer Handgröße zwischen 18,5 cm und 21,5 cm.</p>
+              <p>Alle weiteren Schlüsse liegen bei euch.</p>
+              <p>Mit freundlichen Grüßen<br>KI Mitte – Forensische Auswertung</p>
+            `,
+            attachments: [
+              { label: "📎 Anhang – Verteilungsfunktionen & forensischer Messbericht (PDF)", file: "assets/docs/spur2_aufgabe.pdf" },
+              { label: "📝 Arbeitsblatt – Handgrößen & Normalverteilung (PDF)", file: "assets/docs/spur2_arbeitsblatt.pdf" }
+            ],
+            answerLabel: "Wer scheidet aufgrund der Handgröße aus?",
+            answers: ["david okonkwo", "okonkwo", "david"],
+            eliminated: "David Okonkwo",
+            eliminatedId: "david_okonkwo"
+          },
+          {
+            id: "spur3a",
+            from: "Institut für Rechtsmedizin – Dr. C. Hartmann",
+            subject: "Obduktionsbefund – Fall Feld",
+            time: "Di, 18:24 Uhr",
+            body: `
+              <p>Guten Abend,</p>
+              <p>die Obduktion von Dr. Markus Feld wurde soeben abgeschlossen.</p>
+              <p>Zum Zeitpunkt der Leichenbeschau um 18:00 Uhr wurde eine Körperkerntemperatur von
+              30,0 °C gemessen. Die Raumtemperatur im Labor betrug konstant 20 °C.</p>
+              <p>Für die Abkühlung eines menschlichen Körpers unter diesen Bedingungen gilt
+              erfahrungsgemäß folgende Funktion:</p>
+              <p><span class="formula">T(t) = 20 + 17 · e<sup>−0,16·t</sup></span></p>
+              <p>T = Körpertemperatur in °C, t = Zeit in Stunden seit dem Tod</p>
+              <p>Berechnet anhand dieser Funktion den wahrscheinlichen Todeszeitpunkt.</p>
+              <p>Dr. C. Hartmann – Rechtsmedizin</p>
+            `,
+            attachments: [
+              { label: "📝 Arbeitsblatt – Todeszeitpunkt (PDF)", file: "assets/docs/spur3a_aufgabe.pdf" }
+            ],
+            answerLabel: "Wann trat der Tod ein? (berechnete Uhrzeit, z. B. 14:41)",
+            answers: ["14:41", "14:42", "14:40"],
+            successMessage: "✓ Korrekt! Todeszeitpunkt bestätigt – das Tatzeitfenster liegt bei ca. 14:28–14:47 Uhr."
+          },
+          {
+            id: "spur3b",
+            from: "Kriminalinspektion Mitte – Digitale Forensik",
+            subject: "Smartwatch-Auswertung – Fall Feld",
+            time: "Di, 18:31 Uhr",
+            body: `
+              <p>Guten Abend,</p>
+              <p>wir haben die Smartwatches aller verbliebenen Verdächtigen sichergestellt und
+              ausgewertet. Die Geräte zeichnen die Herzfrequenz kontinuierlich auf. Für fünf Personen
+              konnten die Daten vollständig rekonstruiert werden. Die Funktionen beschreiben die
+              Herzfrequenz f(t) in Schlägen pro Minute, wobei t die Zeit in Stunden ab 13:00 Uhr angibt.</p>
+              <p><strong>Rekonstruierte Herzfrequenzfunktionen:</strong></p>
+              <table>
+                <tr><th>Person</th><th>f(t)</th></tr>
+                <tr><td>Jonas Kern</td><td>2,5t⁴ − 15t³ + 25t² + 70</td></tr>
+                <tr><td>Dr. Elena Voss</td><td>5,15t⁴ − 29,52t³ + 46,35t² + 72</td></tr>
+                <tr><td>Prof. Anton Richter</td><td>13,35t⁴ − 73,0t³ + 106,8t² + 68</td></tr>
+                <tr><td>Sarah Mayer</td><td>7,475t⁴ − 43,86t³ + 71,01t² + 65</td></tr>
+                <tr><td>Felix Hauser</td><td>0,3t³ − 1,2t² + 1,2t + 71,7</td></tr>
+              </table>
+              <p><strong>Sonderfall Miriam Scholz:</strong> Das Gerät von Miriam Scholz wies einen
+              schwerwiegenden Speicherfehler auf – ca. 85 % der Daten sind unwiederbringlich korrumpiert.
+              Aus dem beschädigten Speicher konnten lediglich vier Fragmente gesichert werden:</p>
+              <p>1. Die Herzfrequenz um 13:00 Uhr betrug 65 bpm<br>
+              2. Die Herzfrequenz um 15:00 Uhr betrug 85 bpm<br>
+              3. Der Trendindikator protokollierte um 15:00 Uhr eine Änderungsrate von 0 bpm/h – die
+              Herzfrequenz hatte sich zu diesem Zeitpunkt stabilisiert<br>
+              4. Die interne Diagnosefunktion speichert die zweite Ableitung der Herzfrequenzkurve. Der
+              gesicherte Wert für 15:00 Uhr lautet −8 bpm/h²</p>
+              <p>Eine Rekonstruktion der vollständigen Funktion dritten Grades ist auf Basis dieser vier
+              Fragmente möglich.</p>
+              <p><strong>Eure Aufgabe:</strong> Analysiert die Herzfrequenzverläufe aller sechs Personen
+              mithilfe der Differenzialrechnung. Berechnet für jede Person die Änderungsrate der
+              Herzfrequenz zum Tatzeitpunkt t = 1,7 (entspricht 14:42 Uhr). Wessen Herzfrequenz zeigte zu
+              diesem Zeitpunkt praktisch keine Veränderung?</p>
+              <p>Mit freundlichen Grüßen<br>KI Mitte – Digitale Forensik</p>
+            `,
+            attachments: [
+              { label: "📝 Arbeitsblatt – Herzfrequenz / Ableitungen (PDF)", file: "assets/docs/spur3b_aufgabe.pdf" }
+            ],
+            answerLabel: "Wessen Herzfrequenz zeigte praktisch keine Veränderung? (Diese Person scheidet aus)",
+            answers: ["felix hauser", "hauser", "felix"],
+            eliminated: "Felix Hauser",
+            eliminatedId: "felix_hauser"
+          },
+          {
+            id: "spur4",
+            from: "Kriminalinspektion Mitte – Digitale Forensik",
+            subject: "GPS-Auswertung Smartwatch-Daten – alle Verdächtigen",
+            time: "Mi, 10:33 Uhr",
+            body: `
+              <p>Guten Morgen,</p>
+              <p>alle verbliebenen Verdächtigen wurden zur Tatzeit nach ihrem Aufenthaltsort befragt.
+              Die Smartwatches haben während des Tatzeitfensters kontinuierlich GPS-Geschwindigkeitsdaten
+              aufgezeichnet. Wir haben die Rohdaten ausgewertet und für jede Person eine Funktion v(t)
+              rekonstruiert, die die Gehgeschwindigkeit in Metern pro Minute beschreibt.</p>
+              <p>t gibt die Zeit in Minuten ab 14:00 Uhr an.</p>
+              <p>Die folgende Tabelle zeigt den jeweils behaupteten Aufenthaltsort. Die genauen Distanzen
+              könnt ihr dem beiliegenden Institutslageplan entnehmen.</p>
+              <table>
+                <tr><th>Verdächtige/r</th><th>Behaupteter Aufenthaltsort</th><th>Zeitraum</th></tr>
+                <tr><td>Jonas Kern</td><td>Wartungswerkstatt (Westflügel)</td><td>14:25–14:50 Uhr</td></tr>
+                <tr><td>Miriam Scholz</td><td>Außenlabor (Nachbargebäude)</td><td>14:20–14:55 Uhr</td></tr>
+                <tr><td>Dr. Elena Voss</td><td>Konferenzraum (Innenbau)</td><td>14:18–14:41 Uhr</td></tr>
+                <tr><td>Prof. A. Richter</td><td>Hörsaal (Hauptgebäude West)</td><td>ab 14:00 Uhr</td></tr>
+                <tr><td>Lena Brandt</td><td>Verwaltungsbüro (Erdgeschoss)</td><td>ab 14:00 Uhr</td></tr>
+                <tr><td>Sarah Mayer</td><td>Institutsbibliothek</td><td>14:30–15:00 Uhr</td></tr>
+              </table>
+              <p>Die rekonstruierten Geschwindigkeitsfunktionen sowie das Aufgabenblatt liegen bei.</p>
+              <p><strong>Eure Aufgabe:</strong> Berechnet für jede Person die zurückgelegte Strecke im
+              angegebenen Zeitraum. Vergleicht das Ergebnis mit den Distanzen aus dem Lageplan. Bei wem
+              stimmt die Aussage mit den GPS-Daten überein?</p>
+              <p>Mit freundlichen Grüßen<br>KI Mitte – Digitale Forensik</p>
+            `,
+            attachments: [
+              { label: "📎 Anhang – Geschwindigkeitsfunktionen & Aufgabenblatt (PDF)", file: "assets/docs/spur4_aufgabe.pdf" },
+              { label: "🗺️ Institutslageplan (Bild)", file: "assets/images/spur4_lageplan.png" }
+            ],
+            answerLabel: "Wessen Alibi wird bestätigt? (Diese Person scheidet aus)",
+            answers: ["sarah mayer", "mayer", "sarah"],
+            eliminated: "Sarah Mayer",
+            eliminatedId: "sarah_mayer"
+          },
+          {
+            id: "spur5",
+            from: "Kriminalinspektion Mitte – Spurensicherung",
+            subject: "Kameraauswertung – Fall Feld",
+            time: "Mi, 11:05 Uhr",
+            body: `
+              <p>Guten Morgen,</p>
+              <p>unsere Techniker konnten aus den beschädigten Kameradaten eine verwertbare Aufnahme
+              rekonstruieren. Die Kamera an der Südwand hat zum Tatzeitpunkt eine Person erfasst, die
+              sich im Bereich B aufgehalten hat.</p>
+              <p>Da die Aufnahme aufgrund der Entfernung verpixelt ist, lässt sich die Körpergröße der
+              Person nicht direkt ablesen. Jedoch sind die technischen Daten der Kamera bekannt – ihr
+              habt sie bereits in euren Unterlagen.</p>
+              <p>Der horizontale Abstand zwischen der Kamera und dem Standort der Person beträgt laut
+              Gebäudeplan 5,0 m. Berechnet anhand der Kameradaten die Körpergröße der am Bereich B
+              stehenden Person. Geht aufgrund der Verpixelung von einer Messungenauigkeit von ± 10 cm aus.</p>
+              <p>Gleicht das Ergebnis mit den Körpergrößen der verbliebenen Verdächtigen ab.</p>
+              <p>Mit freundlichen Grüßen<br>KI Mitte – Spurensicherung</p>
+            `,
+            attachments: [
+              { label: "📝 Arbeitsblatt – Körpergröße / Trigonometrie (PDF)", file: "assets/docs/spur5_aufgabe.pdf" }
+            ],
+            answerLabel: "Wer scheidet durch die Körpergröße aus?",
+            answers: ["lena brandt", "brandt", "lena"],
+            eliminated: "Lena Brandt",
+            eliminatedId: "lena_brandt"
+          },
+          {
+            id: "spur6",
+            from: "Kriminalinspektion Mitte – Medizinische Forensik",
+            subject: "Medizinische Sensordaten – Prof. Anton Richter",
+            time: "Mi, 11:52 Uhr",
+            body: `
+              <p>Guten Morgen,</p>
+              <p>im Zuge der Ermittlungen wurde bekannt, dass Prof. Anton Richter einen kontinuierlichen
+              Glukosesensor trägt. Dieser zeichnet den Blutzuckerspiegel automatisch und lückenlos auf.
+              Wir haben die Daten des Sensors für den Tatzeitraum sichergestellt.</p>
+              <p>Die forensische Medizin hat aus den Rohdaten folgendes Modell für den Blutzuckerverlauf
+              von Prof. Richter ab 14:00 Uhr rekonstruiert:</p>
+              <p><span class="formula">B(t) = 95 · e<sup>−0,03·t</sup> + 85</span></p>
+              <p>B(t) … Blutzuckerspiegel in mg/dL<br>t … Zeit in Minuten ab 14:00 Uhr</p>
+              <p><strong>Medizinischer Hinweis:</strong> Ein Blutzuckerwert über 135 mg/dL gilt als
+              eindeutiger Indikator für eine kürzlich eingenommene Mahlzeit. Unterhalb dieses Wertes ist
+              von einem nüchternen oder normalisierten Zustand auszugehen.</p>
+              <p>Die Institutsküche hat laut Betriebsprotokoll von 11:30 bis 14:30 Uhr geöffnet.</p>
+              <p><strong>Eure Aufgabe:</strong> Bestimmt mithilfe der Funktion B(t) den Zeitpunkt, ab dem
+              Prof. Richters Blutzucker unter den medizinischen Grenzwert von 135 mg/dL gefallen ist. Was
+              lässt sich daraus über seinen Aufenthaltsort zur Tatzeit schließen?</p>
+              <p>Mit freundlichen Grüßen<br>KI Mitte – Medizinische Forensik</p>
+            `,
+            attachments: [
+              { label: "📎 Anhang – Aufgabenblatt Blutzucker (PDF)", file: "assets/docs/spur6_aufgabe.pdf" }
+            ],
+            answerLabel: "Wer scheidet durch die Sensordaten aus?",
+            answers: ["prof richter", "richter", "anton richter", "prof anton richter", "professor richter"],
+            eliminated: "Prof. Anton Richter",
+            eliminatedId: "anton_richter"
+          }
+        ];
+
+        // --- RENDER FUNCTIONS ---
+        function render() {
+            // Hide all phases, then show the current one
+            document.querySelectorAll('.phase').forEach(el => el.classList.remove('active'));
+            const currentPhaseEl = document.getElementById(`phase-${state.currentPhase}`);
+            if (currentPhaseEl) {
+                currentPhaseEl.classList.add('active');
+            }
+
+            renderProgressBar();
+            renderSuspects();
+            renderEmailList();
+            renderEmailContent();
+            updateNotificationBadge();
+
+            if (state.currentPhase === 3 && state.emailsReceived.length === 0) {
+                receiveNextEmail();
+            }
+            if (state.currentPhase === 4) {
+                showCallOverlay();
+            }
+            if (state.currentPhase === 6) {
+                renderResolution();
+            }
+        }
+
+        function renderProgressBar() {
+            const bar = document.getElementById('progress-bar');
+            bar.innerHTML = '';
+            for (let i = 0; i < 7; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'progress-dot';
+                if (i === state.currentPhase) {
+                    dot.classList.add('active');
+                }
+                bar.appendChild(dot);
+            }
+        }
+
+        function renderSuspects() {
+            const container = document.getElementById('suspects-container');
+            if (!container) return;
+            container.innerHTML = '';
+            suspects.forEach(s => {
+                const card = document.createElement('div');
+                card.className = 'suspect-card';
+                card.id = `suspect-${s.id}`;
+                if (state.eliminatedSuspects.includes(s.id)) {
+                    card.classList.add('eliminated');
+                }
+
+                const initials = s.name.split(' ').map(n => n[0]).join('');
+                card.innerHTML = `
+                    <div class="img-placeholder" style="background-image: url('assets/images/${s.id}.png'); background-size: cover; background-position: top center;">
+                        <img src="assets/images/${s.id}.png" alt="${s.name}" style="opacity:0;" onerror="this.parentElement.textContent='${initials}'; this.style.display='none';">
+                    </div>
+                    <div class="name">${s.name}</div>
+                    <div class="role">${s.role}</div>
+                    <div class="alibi">${s.alibi}</div>
+                    <div class="stamp">VERDÄCHTIG</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderEmailList() {
+            const list = document.getElementById('email-list');
+            if (!list) return;
+            list.innerHTML = '';
+            state.emailsReceived.forEach(emailId => {
+                const emailData = emailClues.find(e => e.id === emailId);
+                if (!emailData) return;
+
+                const item = document.createElement('li');
+                item.className = 'email-item';
+                if (state.currentEmailId === emailId) {
+                    item.classList.add('active');
+                }
+                if (!state.emailsSolved.includes(emailId)) {
+                    item.classList.add('unread');
+                }
+                item.onclick = () => {
+                    state.currentEmailId = emailId;
+                    saveState();
+                    render();
+                };
+
+                item.innerHTML = `
+                    <div class="from">${emailData.from}</div>
+                    <div class="subject">${emailData.subject}</div>
+                    <div class="time">${emailData.time}</div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function successText(emailData) {
+            return emailData.eliminated
+                ? `✓ Korrekt! ${emailData.eliminated} scheidet aus der Ermittlung aus.`
+                : (emailData.successMessage || '✓ Korrekt!');
+        }
+
+        function renderEmailContent() {
+            const content = document.getElementById('email-content');
+            if (!content) return;
+
+            if (!state.currentEmailId) {
+                content.innerHTML = '<div class="email-content-placeholder">Keine Email ausgewählt</div>';
+                return;
+            }
+
+            const emailData = emailClues.find(e => e.id === state.currentEmailId);
+            if (!emailData) return;
+
+            const attachmentsHTML = (emailData.attachments || [])
+                .map(att => `<a href="${att.file}" target="_blank" class="email-attachment" onclick="handlePdfLink(event, '${att.file}')">${att.label}</a>`)
+                .join('<br>');
+
+            let answerSectionHTML = '';
+            if (!state.emailsSolved.includes(emailData.id)) {
+                answerSectionHTML = `
+                    <div class="email-answer-section" id="answer-section-${emailData.id}">
+                        <div class="input-group">
+                            <label for="answer-${emailData.id}">${emailData.answerLabel}</label>
+                            <input type="text" id="answer-${emailData.id}" placeholder="Name eingeben..." onkeydown="if(event.key==='Enter'){event.preventDefault();submitAnswer('${emailData.id}');}">
+                        </div>
+                        <button class="btn" style="margin-top: 15px;" onclick="submitAnswer('${emailData.id}')">Lösung einreichen</button>
+                        <div id="feedback-${emailData.id}"></div>
+                    </div>
+                `;
+            } else {
+                 answerSectionHTML = `
+                    <div class="feedback-box success">${successText(emailData)}</div>
+                `;
+            }
+
+            content.innerHTML = `
+                <div class="email-header">
+                    <div class="email-header-item"><span class="label">Von:</span> <span>${emailData.from}</span></div>
+                    <div class="email-header-item"><span class="label">An:</span> <span>Ermittlungsteam</span></div>
+                    <div class="email-header-item"><span class="label">Betreff:</span> <span>${emailData.subject}</span></div>
+                    <div class="email-header-item"><span class="label">Datum:</span> <span>${emailData.time}</span></div>
+                </div>
+                <div class="email-body">
+                    ${emailData.body}
+                    ${attachmentsHTML}
+                </div>
+                ${answerSectionHTML}
+            `;
+        }
+
+        function renderResolution() {
+            const culprit = suspects.find(s => s.id === 'jonas_kern');
+            const container = document.getElementById('culprit-reveal');
+            if (!container || !culprit) return;
+
+            container.innerHTML = `
+                <div class="culprit-photo">
+                    <img src="assets/images/jonas_kern.png" alt="Jonas Kern" style="width:100%; height:100%; object-fit:cover; border-radius: 50%;">
+                    <div class="stamp">TÄTER ÜBERFÜHRT</div>
+                </div>
+                <h1>${culprit.name.toUpperCase()}</h1>
+                <h2>${culprit.role}, ${culprit.age} Jahre</h2>
+                <p class="motive">
+                    Dr. Feld bereitete ein offizielles Schreiben vor, das Jonas Kern für gemeinsame Protokollfälschungen allein haftbar machen sollte. Jonas hatte das Schreiben zufällig gesehen – und handelte.
+                </p>
+                <hr>
+                <div class="evidence-chain">
+                    <strong>Beweiskette:</strong><br>
+                    <span>✓&nbsp;│</span> Handgröße 19,8 cm im forensischen Bereich<br>
+                    <span>✓&nbsp;│</span> Herzfrequenz f'(1,7) = +4,1 bpm/h – Aktivität zur Tatzeit<br>
+                    <span>✓&nbsp;│</span> GPS: nur 42 m (Werkstatt wäre 80 m) – Alibi widerlegt<br>
+                    <span>✓&nbsp;│</span> Körpergröße 177 cm liegt in [167, 187] cm<br>
+                    <span>✓&nbsp;│</span> Chip #3 = Jonas Kern, Zugang um 14:44 Uhr
+                </div>
+            `;
+            
+            // Confetti
+            const confettiContainer = document.getElementById('confetti-container');
+            confettiContainer.innerHTML = '';
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                confetti.style.backgroundColor = `hsl(40, 80%, ${60 + Math.random() * 20}%)`;
+                confettiContainer.appendChild(confetti);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        window.advanceToPhase = (phase) => {
+            const mainContent = document.getElementById('main-content');
+            mainContent.style.animation = 'fade-out 0.3s forwards';
+            
+            setTimeout(() => {
+                state.currentPhase = phase;
+                saveState();
+                render();
+                mainContent.style.animation = 'fade-in 0.3s forwards';
+            }, 300);
+        };
+
+        function receiveNextEmail() {
+            const nextEmailIndex = state.emailsReceived.length;
+            if (nextEmailIndex >= emailClues.length) return;
+
+            const nextEmail = emailClues[nextEmailIndex];
+            state.emailsReceived.push(nextEmail.id);
+            state.currentEmailId = nextEmail.id;
+            
+            playNotificationSound();
+            const envelopeIcon = document.querySelector('.envelope-icon');
+            envelopeIcon.classList.add('envelope-shake');
+            setTimeout(() => envelopeIcon.classList.remove('envelope-shake'), 300);
+
+            saveState();
+            render();
+        }
+
+        window.submitAnswer = (emailId) => {
+            const emailData = emailClues.find(e => e.id === emailId);
+            const inputEl = document.getElementById(`answer-${emailId}`);
+            const feedbackEl = document.getElementById(`feedback-${emailId}`);
+            const userAnswer = inputEl.value;
+
+            function checkAnswer(input, answers) {
+                const clean = input.trim().toLowerCase()
+                    .replace(/prof\.?\s*/i, 'prof ')
+                    .replace(/dr\.?\s*/i, 'dr ');
+                if (clean.length < 3) return false;
+                // Treffer nur, wenn die Eingabe einen vollständigen Antwort-Namen
+                // enthält – verhindert, dass einzelne Buchstaben als korrekt gelten.
+                return answers.some(a => clean.includes(a));
+            }
+
+            if (checkAnswer(userAnswer, emailData.answers)) {
+                feedbackEl.innerHTML = `<div class="feedback-box success">${successText(emailData)}</div>`;
+                inputEl.disabled = true;
+                document.querySelector(`#answer-section-${emailId} button`).disabled = true;
+
+                state.emailsSolved.push(emailId);
+                if (emailData.eliminatedId && !state.eliminatedSuspects.includes(emailData.eliminatedId)) {
+                    state.eliminatedSuspects.push(emailData.eliminatedId);
+                }
+                saveState();
+                renderSuspects();
+                updateNotificationBadge();
+
+                setTimeout(() => {
+                    if (state.emailsSolved.length === emailClues.length) {
+                        advanceToPhase(4);
+                    } else {
+                        receiveNextEmail();
+                    }
+                }, 2500);
+
+            } else {
+                feedbackEl.innerHTML = `<div class="feedback-box error">✗ Nicht korrekt. Überprüft eure Rechnung.</div>`;
+                inputEl.classList.add('shake');
+                setTimeout(() => inputEl.classList.remove('shake'), 400);
+            }
+        };
+
+        function showCallOverlay() {
+            let overlay = document.getElementById('call-overlay');
+            if (overlay) overlay.remove();
+
+            overlay = document.createElement('div');
+            overlay.id = 'call-overlay';
+            overlay.className = 'call-overlay';
+            overlay.innerHTML = `
+                <div id="call-incoming-view">
+                    <div class="call-icon">☎</div>
+                    <h1>EINGEHENDER ANRUF</h1>
+                    <h2>KHK Brenner – Kriminalinspektion Mitte, Digitale Forensik</h2>
+                    <h3>Verschlüsselte Leitung</h3>
+                    <div class="call-buttons">
+                        <button class="btn btn-success" id="answer-call-btn">📞 ABHEBEN</button>
+                        <button class="btn btn-danger" disabled>📵 ABLEHNEN</button>
+                    </div>
+                </div>
+                <div id="call-active-view" style="display:none;">
+                    <h1 style="color: var(--success);">VERBUNDEN – KHK BRENNER</h1>
+                    <audio controls id="call-audio" src="assets/audio/telefonat.mp3"></audio>
+                    <p>Hört dem Anruf aufmerksam zu und schreibt alles mit!<br>Tipp: Ihr könnt den Anruf mehrfach abspielen.</p>
+                    <button class="btn" id="end-call-btn" style="display:none; margin-top: 20px;">ANRUF BEENDET – AUSWERTUNG STARTEN →</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            document.getElementById('answer-call-btn').onclick = () => {
+                document.getElementById('call-incoming-view').style.display = 'none';
+                document.getElementById('call-active-view').style.display = 'block';
+                const audio = document.getElementById('call-audio');
+                audio.play();
+
+                const endCallBtn = document.getElementById('end-call-btn');
+                setTimeout(() => endCallBtn.style.display = 'inline-block', 5000);
+                audio.addEventListener('ended', () => {
+                    endCallBtn.style.display = 'inline-block';
+                });
+            };
+
+            document.getElementById('end-call-btn').onclick = () => {
+                document.getElementById('call-overlay').remove();
+                advanceToPhase(5);
+            };
+        }
+
+        window.solveLGS = () => {
+            const p = document.getElementById('lgs-p').value;
+            const t = document.getElementById('lgs-t').value;
+            const feedbackEl = document.getElementById('lgs-feedback');
+
+            if (Number(p) === 3 && Number(t) === 44) {
+                feedbackEl.innerHTML = `
+                    <div class="feedback-box success">
+                        ✓ Chip #3 gehört: Jonas Kern<br>
+                        ✓ Zeitpunkt: 14:00 + 44 min = 14:44 Uhr<br>
+                        ✓ Tatzeitfenster: 14:28–14:47 Uhr ← 14:44 liegt darin.<br>
+                        <strong>MATHEMATISCHER BEWEIS ERBRACHT.</strong>
+                        <button class="btn" id="lgs-continue-btn" style="display:none; margin-top:15px;">TÄTER BENENNEN →</button>
+                    </div>
+                `;
+                setTimeout(() => {
+                    const btn = document.getElementById('lgs-continue-btn');
+                    if(btn) {
+                        btn.style.display = 'block';
+                        btn.onclick = () => advanceToPhase(6);
+                    }
+                }, 2000);
+            } else {
+                feedbackEl.innerHTML = `<div class="feedback-box error">✗ Überprüft eure Rechnung. Tipp: Multipliziert (I) mit 2.</div>`;
+                document.getElementById('lgs-p').parentElement.parentElement.classList.add('shake');
+                setTimeout(() => {
+                    document.getElementById('lgs-p').parentElement.parentElement.classList.remove('shake');
+                }, 400);
+            }
+        };
+
+        window.resetGame = () => {
+            // Gespeicherten Fortschritt löschen ...
+            localStorage.removeItem('escapeRoomState');
+            // ... UND den In-Memory-Zustand zurücksetzen, damit nach dem Reset
+            // kein alter Fortschritt erneut gespeichert werden kann (Reset ist Reset).
+            Object.assign(state, {
+                currentPhase: 0,
+                emailsReceived: [],
+                emailsSolved: [],
+                currentEmailId: null,
+                eliminatedSuspects: []
+            });
+            // Eventuelles Anruf-Overlay (liegt außerhalb der Phasen) entfernen.
+            const overlay = document.getElementById('call-overlay');
+            if (overlay) overlay.remove();
+            render();
+        };
+
+        // --- UTILITY FUNCTIONS ---
+        function playNotificationSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 880;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.4);
+            } catch (e) {
+                console.error("Web Audio API not supported.", e);
+            }
+        }
+
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notification-badge');
+            const unreadCount = state.emailsReceived.length - state.emailsSolved.length;
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        window.handlePdfLink = (event, url) => {
+            if (window.location.protocol === 'file:') {
+                event.preventDefault();
+                alert(`Das PDF kann aufgrund von Browsereinschränkungen nicht direkt geöffnet werden.\n\nBitte öffne die Datei manuell im Ordner:\n${url}`);
+            }
+        };
+
+        document.getElementById('email-icon-container').onclick = () => {
+            // Posteingang erst öffnen, wenn überhaupt eine Mail eingegangen ist.
+            // Verhindert, dass man vor dem regulären Spielstart in die Mail-Phase springt.
+            if (state.emailsReceived.length === 0) return;
+            if (state.currentPhase !== 3) {
+                advanceToPhase(3);
+            }
+        };
+
+        document.getElementById('reset-btn').onclick = () => {
+            const code = prompt('Lehrer-Code zum kompletten Neustart eingeben:');
+            if (code === null) return; // Abbruch
+            if (code.trim() === RESET_CODE) {
+                resetGame();
+            } else {
+                alert('Falscher Code – Neustart abgebrochen.');
+            }
+        };
+
+        // --- INITIALIZATION ---
+        loadState();
+        render();
+    });
+    </script>
+</body>
+</html>
