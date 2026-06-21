@@ -1105,7 +1105,7 @@
                     <div class="email-answer-section" id="answer-section-${emailData.id}">
                         <div class="input-group">
                             <label for="answer-${emailData.id}">${emailData.answerLabel}</label>
-                            <input type="text" id="answer-${emailData.id}" placeholder="Name eingeben..." onkeydown="if(event.key==='Enter'){event.preventDefault();submitAnswer('${emailData.id}');}">
+                            <input type="text" id="answer-${emailData.id}" placeholder="Lösung eingeben..." onkeydown="if(event.key==='Enter'){event.preventDefault();submitAnswer('${emailData.id}');}">
                         </div>
                         <button class="btn" style="margin-top: 15px;" onclick="submitAnswer('${emailData.id}')">Lösung einreichen</button>
                         <div id="feedback-${emailData.id}"></div>
