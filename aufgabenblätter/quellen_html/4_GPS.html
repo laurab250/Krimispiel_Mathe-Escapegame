@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang='de'><head><meta charset='utf-8'><style>
+@page { size:A4; margin:13mm 14mm 11mm 14mm; }
+*{box-sizing:border-box;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:10.5pt;color:#111;line-height:1.42;margin:0;}
+.hdr{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2.2pt solid #111;padding-bottom:1.5mm;}
+.hdr .t{font-size:15pt;font-weight:bold;letter-spacing:.2pt;}
+.hdr .b{font-size:9pt;color:#555;text-align:right;}
+.meta{display:flex;justify-content:space-between;font-size:9pt;color:#333;margin:2mm 0 3mm;}
+.given{border:1pt solid #111;background:#eef1f4;padding:2.5mm 3mm;margin:2mm 0 3mm;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.given .gl{font-weight:bold;font-size:9pt;letter-spacing:.4pt;text-transform:uppercase;color:#333;margin-bottom:1mm;}
+.task{margin:3.5mm 0 1mm;break-inside:avoid;}
+.task h2{font-size:11pt;margin:0 0 1.2mm;}
+.q{margin:0 0 1.5mm;}
+.wline{border-bottom:1px solid #999;height:6.6mm;}
+.blank{display:inline-block;min-width:30mm;border-bottom:1px solid #555;}
+.formula{font-family:'Courier New',monospace;font-weight:bold;}
+table.data{border-collapse:collapse;width:100%;font-size:9.5pt;margin:2mm 0;}
+table.data th,table.data td{border:1px solid #444;padding:1.5mm 2mm;text-align:left;vertical-align:top;}
+table.data th{background:#e3e3e3;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.tall td{height:8.5mm;}
+.grid{border:1pt solid #444;background-image:repeating-linear-gradient(#bcd4ec 0 .35mm,transparent .35mm 5mm),repeating-linear-gradient(90deg,#bcd4ec 0 .35mm,transparent .35mm 5mm);-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid;margin:1.5mm 0 2mm;}
+.gl2{font-size:8.5pt;color:#666;margin:0 0 .5mm;}
+.hint{font-size:9pt;color:#555;font-style:italic;}
+.result{border:1.3pt solid #111;padding:2mm 3mm;margin:1.5mm 0;background:#eef1f4;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+ul.c{margin:.5mm 0 1.5mm 5mm;padding:0;} ul.c li{margin:.4mm 0;}
+.sub{font-size:9pt;color:#555;}
+</style></head><body><div class='hdr'><div class='t'>SPUR 4 — GPS-AUSWERTUNG</div><div class='b'>Fall #2024-0311<br>Bestimmtes Integral · Alibiüberprüfung</div></div><div class='meta'><span>Name(n): _______________________________</span><span>Klasse: __________</span><span>Datum: __________</span></div><div class='given'><div class='gl'>Gegeben</div>Aus den Smartwatch-Daten wurden Geschwindigkeitsfunktionen <span class='formula'>v(t)</span> rekonstruiert (in m/min, t in Minuten ab 14:00 Uhr). Das Integral der Geschwindigkeit über den Zeitraum ergibt die <b>zurückgelegte Strecke</b>. Die Distanz laut Lageplan ist die Strecke, die der behauptete Aufenthaltsort erfordern würde.</div><div class='task'><h2>a) Strecken berechnen</h2>Berechnet für jede Person das bestimmte Integral über den t-Bereich und tragt die Strecke ein.<table class='data'><tr><th>Person</th><th>v(t) [m/min]</th><th>t-Bereich</th><th>Distanz (Lageplan)</th><th>Strecke ∫v(t)dt [m]</th></tr><tr class='tall'><td>Jonas Kern</td><td class='formula'>−0,016t<sup>2</sup> + 1,2t − 20</td><td>[25, 50]</td><td>80 m</td><td></td></tr><tr class='tall'><td>Miriam Scholz</td><td class='formula'>−0,025t<sup>2</sup> + 1,875t − 27,5</td><td>[20, 55]</td><td>380 m</td><td></td></tr><tr class='tall'><td>Dr. E. Voss</td><td class='formula'>−0,05t<sup>2</sup> + 2,95t − 36,9</td><td>[18, 41]</td><td>220 m</td><td></td></tr><tr class='tall'><td>Prof. Richter</td><td class='formula'>−0,095t<sup>2</sup> + 2,85t − 11,875</td><td>[5, 25]</td><td>600 m</td><td></td></tr><tr class='tall'><td>Lena Brandt</td><td class='formula'>−0,04t<sup>2</sup> + 0,6t</td><td>[0, 15]</td><td>120 m</td><td></td></tr><tr class='tall'><td>Sarah Mayer</td><td class='formula'>−0,1t<sup>2</sup> + 9t − 180</td><td>[30, 60]</td><td>450 m</td><td></td></tr></table><div class='gl2'>Rechnung / Lösungsweg:</div><div class='grid' style='height:85mm'></div></div><div class='task'><h2>b) Vergleich & Schlussfolgerung</h2>Bei wem stimmt die berechnete Strecke mit der Distanz aus dem Lageplan überein? Dessen Alibi ist bestätigt.<div class='result'>Wessen Aussage wird durch die GPS-Daten bestätigt (scheidet aus)? <span class='blank' style='min-width:55mm'></span><br>Bei wem passt die Strecke <b>nicht</b> zum behaupteten Ort?</div><div class='wline'></div><div class='wline'></div></div></body></html>
