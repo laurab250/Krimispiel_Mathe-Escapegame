@@ -1337,6 +1337,15 @@
             // Eventuelles Anruf-Overlay (liegt außerhalb der Phasen) entfernen.
             const overlay = document.getElementById('call-overlay');
             if (overlay) overlay.remove();
+
+            // Felder für das Gleichungssystem zurücksetzen
+            const lgsP = document.getElementById('lgs-p');
+            const lgsT = document.getElementById('lgs-t');
+            const lgsFeedback = document.getElementById('lgs-feedback');
+            if (lgsP) lgsP.value = '';
+            if (lgsT) lgsT.value = '';
+            if (lgsFeedback) lgsFeedback.innerHTML = '';
+
             render();
         };
 
