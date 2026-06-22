@@ -10,7 +10,7 @@
             --bg-dark:      #0f1117;
             --bg-card:      #1a1d27;
             --bg-input:     #252836;
-            --accent:       #e8a838;
+            --accent:       #f2ad2d;
             --accent-dim:   #b07a1a;
             --text-primary: #e8e8e8;
             --text-muted:   #888ea8;
@@ -677,7 +677,7 @@
         </div>
         <div class="header-right">
             <div class="header-icon-btn" id="docs-icon-container">
-                <span title="Wichtige Dokumente">�</span>
+                <span title="Wichtige Dokumente">🗂️</span>
                 <div class="docs-popup" id="docs-popup">
                     <a href="assets/images/wimmelbild.pdf" target="_blank">🔍 Wimmelbild (PDF)</a>
                     <a href="assets/images/spur4_lageplan.png" target="_blank">🗺️ Institutslageplan (Bild)</a>
@@ -1404,9 +1404,9 @@
                 osc.frequency.value = 880;
                 osc.type = 'sine';
                 gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
                 osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.4);
+                osc.stop(ctx.currentTime + 0.2);
             } catch (e) {
                 console.error("Web Audio API not supported.", e);
             }
